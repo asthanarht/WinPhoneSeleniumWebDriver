@@ -1,0 +1,194 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Condition="'$(EnvironmentConfig)' != ''" Project="$(EnvironmentConfig)" />
+  <!-- ****************************************************************************
+  General Settings
+  ********************************************************************************* -->
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <ProductVersion>10.0.20506</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{E2F66338-1EAC-4D67-979E-194CC9CB3688}</ProjectGuid>
+    <ProjectTypeGuids>{C089C8C0-30E0-4E22-80C0-CE093F111A43};{fae04ec0-301f-11d3-bf4b-00c04f79efbc}</ProjectTypeGuids>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>WindowsPhoneDriver</RootNamespace>
+    <AssemblyName>WindowsPhoneDriver</AssemblyName>
+    <TargetFrameworkIdentifier>WindowsPhone</TargetFrameworkIdentifier>
+    <TargetFrameworkVersion>v8.0</TargetFrameworkVersion>
+    <SilverlightVersion>$(TargetFrameworkVersion)</SilverlightVersion>
+    <SilverlightApplication>true</SilverlightApplication>
+    <SupportedCultures>
+    </SupportedCultures>
+    <SilverlightRuntimeVersion>4.7.50308.0</SilverlightRuntimeVersion>
+    <XapOutputs>true</XapOutputs>
+    <GenerateSilverlightManifest>true</GenerateSilverlightManifest>
+    <XapFilename>WindowsPhoneDriver.xap</XapFilename>
+    <SilverlightManifestTemplate>Properties\AppManifest.xml</SilverlightManifestTemplate>
+    <SilverlightAppEntry>WindowsPhoneDriver.App</SilverlightAppEntry>
+    <ValidateXaml>true</ValidateXaml>
+    <MinimumVisualStudioVersion>11.0</MinimumVisualStudioVersion>
+    <ThrowErrorsInValidation>true</ThrowErrorsInValidation>
+    <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
+    <RestorePackages>true</RestorePackages>
+  </PropertyGroup>
+  <PropertyGroup>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <DefineConstants>DEBUG;TRACE;SILVERLIGHT;WINDOWS_PHONE</DefineConstants>
+    <NoStdLib>true</NoStdLib>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  
+    <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
+        <BuildLog>
+            <Path>buildd.log</Path>
+        </BuildLog>
+    </ItemDefinitionGroup>
+    <ItemDefinitionGroup Condition="'$(Configuration)'=='Release'">
+        <BuildLog>
+            <Path>build.log</Path>
+        </BuildLog>
+    </ItemDefinitionGroup>
+	
+    <PropertyGroup>
+        <!-- &#169; is the unicode code for the Copyright symbol -->
+        <AssemblyCopyright>&#169; 2013 Microsoft Corporation. All rights reserved</AssemblyCopyright>
+        <!-- &#174; is the unicode code for the Registered Trademark symbol -->
+        <AssemblyCompany>Microsoft Corporation</AssemblyCompany>
+		<BinsPath>$(INETROOT)\bins\$(BuildType)\$(BuildArchitecture)\</BinsPath>
+    </PropertyGroup>
+
+  <PropertyGroup>
+    <SkipAssemblyComVisible>true</SkipAssemblyComVisible>
+    <SkipAssemblyClsCompliant>true</SkipAssemblyClsCompliant>
+    <SkipAssemblyTitle>true</SkipAssemblyTitle>
+    <SkipAssemblyDescription>true</SkipAssemblyDescription>
+  </PropertyGroup>
+
+  <!-- *******************************************************************************
+  File list
+  ************************************************************************************ -->
+  <ItemGroup>
+    <Compile Include="ApiPattern.cs" />
+    <Compile Include="App.xaml.cs">
+      <DependentUpon>App.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="AutomatedWebBrowser.cs" />
+    <Compile Include="Config.cs" />
+    <Compile Include="Helpers.cs" />
+    <Compile Include="MiniHttpServer.cs" />
+    <Compile Include="Listener.cs" />
+    <Compile Include="LocalizedStrings.cs" />
+    <Compile Include="MainPage.xaml.cs">
+      <DependentUpon>MainPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="RequestHandlers.cs" />
+    <Compile Include="Resources\AppResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>AppResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="JsonWire.cs" />
+    <Compile Include="SocketIO.cs" />
+    <Compile Include="WebRequest.cs" />
+    <Compile Include="WebResponse.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ApplicationDefinition Include="App.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </ApplicationDefinition>
+    <Page Include="MainPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Properties\AppManifest.xml" />
+    <None Include="Properties\WMAppManifest.xml">
+      <SubType>Designer</SubType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Assets\AlignmentGrid.png" />
+    <Content Include="Assets\ApplicationIcon.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Tiles\FlipCycleTileLarge.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Tiles\FlipCycleTileMedium.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Tiles\FlipCycleTileSmall.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Tiles\IconicTileMediumLarge.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Tiles\IconicTileSmall.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Js\Atoms\clear_ie.js" />
+    <Content Include="Js\Atoms\click_ie.js" />
+    <Content Include="Js\Atoms\find_elements_ie.js" />
+    <Content Include="Js\Atoms\find_element_ie.js" />
+    <Content Include="Js\Atoms\get_attribute_ie.js" />
+    <Content Include="Js\Atoms\get_effective_style_ie.js" />
+    <Content Include="Js\Atoms\get_location_ie.js" />
+	<Content Include="Js\Atoms\inputs.js" />
+    <Content Include="Js\Atoms\get_size_ie.js" />
+    <Content Include="Js\Atoms\get_text_ie.js" />
+    <Content Include="Js\Atoms\is_displayed_ie.js" />
+    <Content Include="Js\Atoms\is_editable_ie.js" />
+    <Content Include="Js\Atoms\is_enabled_ie.js" />
+    <Content Include="Js\Atoms\is_interactable_ie.js" />
+    <Content Include="Js\Atoms\is_in_parent_overflow_ie.js" />
+    <Content Include="Js\Atoms\is_selected_ie.js" />
+    <Content Include="Js\Atoms\submit_ie.js" />
+    <Content Include="Js\Functions.js" />
+    <Content Include="Js\jsTests.html" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\AppResources.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>AppResources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>$(ExtPath)\Newtonsoft.Json\5.0.6\portable-net45+wp80+win8\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath)\Microsoft\$(TargetFrameworkIdentifier)\$(TargetFrameworkVersion)\Microsoft.$(TargetFrameworkIdentifier).$(TargetFrameworkVersion).Overrides.targets" />
+  <Import Project="$(ExtendedTargetsPath)\Microsoft.$(TargetFrameworkIdentifier).CSharp.targets" />
+  <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
+  <!--***********************************************************************
+  BINPLACING
+  ************************************************************************** -->
+  <ItemGroup>
+    <RoboCopy Include="$(OutDir)\WindowsPhoneDriver.xap">
+      <DestinationFolder>$(BinsPath)\ServiceFundamentals\Selenium\WindowsPhoneDriver</DestinationFolder>
+    </RoboCopy>
+  </ItemGroup>
+  <!--
+  <ItemGroup>
+    <PostBuildCopy Include="$(OutDir)\*.xap">
+      <DestinationFolder>$(BinsPath)\ServiceFundamentals\Selenium\WindowsPhoneDriver</DestinationFolder>
+    </PostBuildCopy>
+  </ItemGroup>
+   -->
+
+  <!--
+  <PropertyGroup>
+    <PostBuildEvent>copy $(OutDir)\*.xap $(BinsPath)\ServiceFundamentals\Selenium\WindowsPhoneDriver\</PostBuildEvent>
+  </PropertyGroup>
+   -->
+
+  <ProjectExtensions />
+  <!--<Import Project="$(ExtendedTargetsPath)\Microsoft.CSharp.targets" />-->
+</Project>

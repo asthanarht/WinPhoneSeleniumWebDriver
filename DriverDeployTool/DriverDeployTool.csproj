@@ -1,0 +1,120 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Condition="'$(EnvironmentConfig)' != ''" Project="$(EnvironmentConfig)" />
+  <!-- ****************************************************************************
+  General Settings
+  ********************************************************************************* -->
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{03FE7DD7-C74C-4003-97AC-FC7D890417AF}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>DriverDeployTool</RootNamespace>
+    <AssemblyName>DriverDeployTool</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  
+  
+      <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
+        <BuildLog>
+            <Path>buildd.log</Path>
+        </BuildLog>
+    </ItemDefinitionGroup>
+    <ItemDefinitionGroup Condition="'$(Configuration)'=='Release'">
+        <BuildLog>
+            <Path>build.log</Path>
+        </BuildLog>
+    </ItemDefinitionGroup>
+
+    <!-- Assembly Properties -->
+    <PropertyGroup>
+        <!-- &#169; is the unicode code for the Copyright symbol -->
+        <AssemblyCopyright>&#169; 2013 Microsoft Corporation. All rights reserved</AssemblyCopyright>
+        <!-- &#174; is the unicode code for the Registered Trademark symbol -->
+        <AssemblyCompany>Microsoft Corporation</AssemblyCompany>
+		<BinsPath>$(INETROOT)\bins\$(BuildType)\$(BuildArchitecture)\</BinsPath>
+    </PropertyGroup>
+
+
+  
+  <!-- ****************************************************************************
+  Imports
+  ********************************************************************************* -->
+
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <Import Project="$(ExtendedTargetsPath)\Microsoft.CSharp.targets" />
+  <!-- *******************************************************************************
+  References and Dependencies
+  *********************************************************************************** -->
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO.Compression.FileSystem" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+    <Reference Include="XapDeployDll">
+      <HintPath>.\XapDeployDll.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <!-- **********************************************************************************
+  File list
+  ************************************************************************************ -->
+  <ItemGroup>
+    <Compile Include="DeploymentAutmator.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="WindowsPhoneDriver.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="StartWindowsPhoneDriver.cmd">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <!--***********************************************************************
+  BINPLACING
+  ************************************************************************** -->
+  <ItemGroup>
+    <RoboCopy Include="$(OutDir)\StartWindowsPhoneDriver.cmd">
+      <DestinationFolder>$(BinsPath)\ServiceFundamentals\Selenium\WindowsPhoneDriver</DestinationFolder>
+    </RoboCopy>
+    <RoboCopy Include="$(OutDir)\XapDeployDll.dll">
+      <DestinationFolder>$(BinsPath)\ServiceFundamentals\Selenium\WindowsPhoneDriver</DestinationFolder>
+    </RoboCopy>
+    <RoboCopy Include="$(OutDir)\DriverDeployTool.exe">
+      <DestinationFolder>$(BinsPath)\ServiceFundamentals\Selenium\WindowsPhoneDriver</DestinationFolder>
+    </RoboCopy>
+    <RoboCopy Include="$(OutDir)\WindowsPhoneDriver.xml">
+      <DestinationFolder>$(BinsPath)\ServiceFundamentals\Selenium\WindowsPhoneDriver</DestinationFolder>
+    </RoboCopy>
+  </ItemGroup>
+</Project>

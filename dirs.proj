@@ -1,0 +1,9 @@
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!-- Build environment properties -->
+  <Import Condition="'$(EnvironmentConfig)' != ''" Project="$(EnvironmentConfig)" />
+  <ItemGroup>
+    <ProjectFile Include="WindowsPhoneDriver\WindowsPhoneDriver.csproj" />
+    <ProjectFile Include="DriverDeployTool\DriverDeployTool.csproj" />
+  </ItemGroup>
+  <Import Project="$(ExtendedTargetsPath)\Traversal.targets" />
+</Project>
