@@ -34,14 +34,14 @@ namespace WindowsPhoneDriver
         /// <returns></returns>
         public static string WrapFunctionCallWithResult(string script, params object[] paramters)
         {
-            return string.Format("SeleniumWindowsPhoneDriver.LastCallResult = {0}", WrapFunctionCall(script, paramters));
+            return string.Format("window.top.document.__wd_fn_result = {0}", WrapFunctionCall(script, paramters));
         }
 
         public static string WrapFunctionCall(string script, params object[] paramters)
         {
             string wrapedParams = WrapParameters(paramters);
 
-            return string.Format("(function() {{ return ({0}){1} ;}} )();", script, wrapedParams);
+            return string.Format("({0})({1});", script, wrapedParams);
         } 
 
         public static string WrapString(string input)
@@ -51,9 +51,23 @@ namespace WindowsPhoneDriver
 
         private static string WrapParameters(params object[] paramters)
         {
-            StringBuilder sb = new StringBuilder("(");
-            sb.Append(string.Join(",", paramters));
-            sb.Append(")");
+            StringBuilder sb = new StringBuilder();
+            foreach (object param in paramters)
+            {
+                if (sb.Length > 0)
+                {
+                    sb.Append(", ");
+                }
+
+                if (param == null)
+                {
+                    sb.Append("null");
+                }
+                else
+                {
+                    sb.Append(param.ToString());
+                }
+            }
 
             return sb.ToString();
         }
@@ -101,7 +115,7 @@ namespace WindowsPhoneDriver
 
             response.StatusCode = 200;
             response.ContentType = "application/json;charset=utf-8";
-            response.Content = JsonWire.BuildRespose(content, JsonWire.ResponseCode.Sucess, sessionId);
+            response.Content = content;
 
             return response;
         }

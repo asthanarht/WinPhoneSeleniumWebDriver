@@ -58,7 +58,7 @@ Windows Phone Selenium WebDriver
       Parameters:
 
           /isetool      - Path to the ISETool.exe 
-          /targetdevice - 'device' of 'emulator'
+          /targetdevice - 'device' or 'emulator'
           /xapfile      - Path to the *.xap application file
           /config       - Name of the config file
           /setenv       - Name of the environmental variable that
@@ -88,6 +88,19 @@ Windows Phone Selenium WebDriver
    If you want to add another functionalities, keep that in mind that, interaction with WebBrowser control
    can be only done in the main thread.
 
+   This project is dependent on the Selenium project's Automation Atoms (http://code.google.com/p/selenium/wiki/AutomationAtoms).
+   These are JavaScript functions intended to be used as building blocks for automating browsers, and are
+   maintained by the maintainers of the Selenium project. These atoms are located in this project in WebDriverAtoms.cs.
+   To update these atoms with the latest code from the Selenium project, you will need a local clone of
+   the Selenium project that will successfully build the atoms. For more information about building the
+   Selenium project, please see http://code.google.com/p/selenium/wiki/BuildingWebDriver. To update the
+   atoms, you can use the updateatoms.cmd file located in the support folder as follows:
+
+       updateatoms.cmd C:\path\to\the\root\of\your\selenium\source\code
+
+   This will build the latest atoms from the Selenium project, and update WebDriverAtoms.cs with the latest
+   code.
+
 5. Limitations
 
    - No support for touching automations
@@ -97,7 +110,7 @@ Windows Phone Selenium WebDriver
    All functions that are not implemented will return appropriate error message specified as in
    JsonWireProtocol document.
 
-5. Third party dependencies
+6. Third party dependencies
     The following third-party products were used to create Windows Phone WebDriver:
     - Selenium (http://www.seleniumhq.org/, Apache 2.0 license)
     - Newtonsoft.Json.dll (https://json.codeplex.com/, The MIT License (MIT))

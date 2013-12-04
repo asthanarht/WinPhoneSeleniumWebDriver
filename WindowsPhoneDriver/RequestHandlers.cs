@@ -69,18 +69,15 @@ namespace WindowsPhoneDriver
             //currently don't support multiple sessions
             string sessionId = BrowserState.GetSessionId();
 
-            WebResponse response = Helpers.GetSuccessWithContent(
-                                sessionId,
-                                "{\"browserAttachTimeout\":0,\"browserName\":\"internet explorer\",\"cssSelectorsEnabled\":true,\"elementScrollBehavior\":0,\"enableElementCacheCleanup\":true,\"enablePersistentHover\":true,\"handlesAlerts\":true,\"ignoreProtectedModeSettings\":false,\"ignoreZoomSetting\":false,\"initialBrowserUrl\":\"\",\"javascriptEnabled\":true,\"nativeEvents\":true,\"platform\":\"WINDOWS\",\"requireWindowFocus\":true,\"takesScreenshot\":true,\"unexpectedAlertBehaviour\":\"ignore\",\"version\":\"10\"}"
-                                );
-
-            return response;
+            string content = "{\"sessionId\":\"" + sessionId + "\",\"status\":0,\"value\":{\"browserAttachTimeout\":0,\"browserName\":\"internet explorer\",\"cssSelectorsEnabled\":true,\"elementScrollBehavior\":0,\"enableElementCacheCleanup\":true,\"enablePersistentHover\":true,\"handlesAlerts\":true,\"ignoreProtectedModeSettings\":false,\"ignoreZoomSetting\":false,\"initialBrowserUrl\":\"\",\"javascriptEnabled\":true,\"nativeEvents\":true,\"platform\":\"WINDOWS\",\"requireWindowFocus\":true,\"takesScreenshot\":true,\"unexpectedAlertBehaviour\":\"ignore\",\"version\":\"10\"}}";
+            return Helpers.GetSuccessWithContent(sessionId, content);
         }
 
         public WebResponse DeleteSession(WebRequest request, Dictionary<string, string> matchedApiValues)
         {
             string sessionId = BrowserState.GetSessionId();
-            return Helpers.GetSuccessWithContent(sessionId, "null");
+            string content = "{\"sessionId\":\"" + sessionId + "\",\"status\":0,\"value\":null}";
+            return Helpers.GetSuccessWithContent(sessionId, content);
         }
 
         public WebResponse PostTimeouts(WebRequest request, Dictionary<string, string> matchedApiValues)
@@ -167,11 +164,12 @@ namespace WindowsPhoneDriver
 
             //only first overload of Seleniums Execute is implemneted (i.e. you cannot pass parameters)
             string script = dict["script"].ToString();
+            string argsString = JsonConvert.SerializeObject(dict["args"]);
             string sessionId = BrowserState.GetSessionId();
 
-            string ret = BrowserState.Execute(script);
+            string ret = BrowserState.Execute(script, argsString);
 
-            return Helpers.GetSuccessWithContent(sessionId, "true");
+            return Helpers.GetSuccessWithContent(sessionId, ret);
         }
 
         public WebResponse PostExecuteAsync(WebRequest request, Dictionary<string, string> matchedApiValues)
@@ -186,7 +184,6 @@ namespace WindowsPhoneDriver
             StringBuilder sb = new StringBuilder();
             string sessionIdString = BrowserState.GetSessionId();
 
-            response.Content = "{\"sessionId\":\"" + sessionIdString + "\",\"status\":0,\"value\":\"" + base64Screenshot + "\"}"; 
             response.StatusCode = 200;
             response.ContentType = "application/json;charset=utf-8";
             response.Content = "{\"sessionId\":\"" + sessionIdString + "\",\"status\":0,\"value\":\"" + base64Screenshot + "\"}"; 
@@ -221,7 +218,16 @@ namespace WindowsPhoneDriver
 
         public WebResponse PostFrame(WebRequest request, Dictionary<string, string> matchedApiValues)
         {
-            return WebResponse.NotImplemented();
+            Dictionary<string, object> dict = request.DeserializeContent();
+            string id = null;
+            if (dict.ContainsKey("id") && dict["id"] != null)
+            {
+                id = dict["id"].ToString();
+            }
+
+            string result = BrowserState.SwitchToFrame(id);
+            WebResponse response = Helpers.GetSuccessWithContent("", result);
+            return response;
         }
 
         public WebResponse PostWindow(WebRequest request, Dictionary<string, string> matchedApiValues)
@@ -307,25 +313,11 @@ namespace WindowsPhoneDriver
 
         public WebResponse PostElement(WebRequest request, Dictionary<string, string> matchedApiValues)
         {
-            WebResponse response = new WebResponse();
-
             Dictionary<string, object> dict = request.DeserializeContent();
-            string elementJson = BrowserState.FindElement((string)dict["using"], (string)dict["value"]);
+            string elementJson = BrowserState.FindElement((string)dict["using"], (string)dict["value"], null);
             string sessionId = BrowserState.GetSessionId();
 
-            if (elementJson != string.Empty)
-            {
-                response.StatusCode = 200;
-                response.ContentType = "application/json;charset=utf-8";
-                elementJson = "{\"ELEMENT\":\"" + elementJson + "\"}";
-                response.Content = JsonWire.BuildRespose(elementJson, JsonWire.ResponseCode.Sucess, sessionId);
-            }
-            else
-            {
-                response.StatusCode = 404;
-                response.ContentType = "text/plain";
-                response.Content = "No such element";
-            }
+            WebResponse response = Helpers.GetSuccessWithContent(sessionId, elementJson);
 
             return response;
         }
@@ -333,7 +325,7 @@ namespace WindowsPhoneDriver
         public WebResponse PostElements(WebRequest request, Dictionary<string, string> matchedApiValues)
         {
             Dictionary<string, object> dict = request.DeserializeContent();
-            string elementsArray = BrowserState.FindElements((string)dict["using"], (string)dict["value"]);
+            string elementsArray = BrowserState.FindElements((string)dict["using"], (string)dict["value"], null);
             string sessionId = BrowserState.GetSessionId();
 
             WebResponse response = Helpers.GetSuccessWithContent(sessionId, elementsArray);
@@ -353,38 +345,42 @@ namespace WindowsPhoneDriver
 
         public WebResponse PostElementElement(WebRequest request, Dictionary<string, string> matchedApiValues)
         {
-            return WebResponse.NotImplemented();
+            Dictionary<string, object> dict = request.DeserializeContent();
+            string elementJson = BrowserState.FindElement((string)dict["using"], (string)dict["value"], matchedApiValues["id"]);
+            string sessionId = BrowserState.GetSessionId();
+
+            WebResponse response = Helpers.GetSuccessWithContent(sessionId, elementJson);
+
+            return response;
         }
 
         public WebResponse PostElementElements(WebRequest request, Dictionary<string, string> matchedApiValues)
         {
-            return WebResponse.NotImplemented();
+            Dictionary<string, object> dict = request.DeserializeContent();
+            string elementsArray = BrowserState.FindElements((string)dict["using"], (string)dict["value"], null);
+            string sessionId = BrowserState.GetSessionId();
+
+            WebResponse response = Helpers.GetSuccessWithContent(sessionId, elementsArray);
+
+            return response;
         }
 
         public WebResponse PostElementClick(WebRequest request, Dictionary<string, string> matchedApiValues)
         {
-            return WebResponse.NotImplemented();
+            string sessionId = BrowserState.GetSessionId();
+            string result = BrowserState.Click(matchedApiValues["id"]);
+
+            WebResponse resp = Helpers.GetSuccessWithContent(sessionId, result);
+            return resp;
         }
 
         public WebResponse PostElementSubmit(WebRequest request, Dictionary<string, string> matchedApiValues)
         {
             string sessionId = BrowserState.GetSessionId();
+            string result = BrowserState.Submit(matchedApiValues["id"]);
 
-            try
-            {
-                BrowserState.Submit(matchedApiValues["id"]);
-            }
-            catch
-            {
-                //Client tried to click on non-form element for example:  div
-                //Unfortunately  JsonWireProtocol  doesn't say anything about
-                //this kind of situation so we are just adding it to log file
-                //and reporting success.
-                Helpers.Log("Tryied to submit non-form element.");
-                return Helpers.GetSuccessWithContent(sessionId, "null");
-            }
-
-            return Helpers.GetSuccessWithContent(sessionId, "null");
+            WebResponse resp = Helpers.GetSuccessWithContent(sessionId, result);
+            return resp;
         }
 
         public WebResponse GetElementText(WebRequest request, Dictionary<string, string> matchedApiValues)
@@ -399,23 +395,15 @@ namespace WindowsPhoneDriver
 
         public WebResponse PostElementValue(WebRequest request, Dictionary<string, string> matchedApiValues)
         {
-            WebResponse response = new WebResponse();
             string sessionId = BrowserState.GetSessionId();
+            
+            Dictionary<string, char[]> dict = JsonConvert.DeserializeObject<Dictionary<string, char[]>>(request.Content);
+            char[] keys = dict["value"];
 
-            if (matchedApiValues.ContainsKey("id") == true)
-            {
-                Dictionary<string, char[]> dict = JsonConvert.DeserializeObject<Dictionary<string, char[]>>(request.Content);
+            string result = BrowserState.Type(matchedApiValues["id"], new string(keys));
 
-                char[] keys = dict["value"];
-
-                BrowserState.Type(matchedApiValues["id"], new string(keys), 0, false);
-
-                response.StatusCode = 200;
-                response.ContentType = "application/json; charset=utf-8";
-                response.Content = JsonWire.BuildRespose("{}", JsonWire.ResponseCode.Sucess, sessionId);
-            }
-
-            return response;
+            WebResponse resp = Helpers.GetSuccessWithContent(sessionId, result);
+            return resp;
         }
 
         public WebResponse PostKeys(WebRequest request, Dictionary<string, string> matchedApiValues)
@@ -425,7 +413,10 @@ namespace WindowsPhoneDriver
 
         public WebResponse GetElementName(WebRequest request, Dictionary<string, string> matchedApiValues)
         {
-            return WebResponse.NotImplemented();
+            string sessionId = BrowserState.GetSessionId();
+            string tagName = BrowserState.GetTagName(matchedApiValues["id"]);
+
+            return Helpers.GetSuccessWithContent(sessionId, tagName);
         }
 
         public WebResponse PostElementClear(WebRequest request, Dictionary<string, string> matchedApiValues)
@@ -550,10 +541,10 @@ namespace WindowsPhoneDriver
             WebResponse response = new WebResponse();
             string sessionId = BrowserState.GetSessionId();
 
-            bool clicked = BrowserState.Click(matchedApiValues["id"]);
+            string content = BrowserState.Click(matchedApiValues["id"]);
 
             response.StatusCode = 200;
-            response.Content = JsonWire.BuildRespose("{}", JsonWire.ResponseCode.Sucess,sessionId);
+            response.Content = content;
             response.ContentType = "application/json;charset=utf-8";
 
             return response;

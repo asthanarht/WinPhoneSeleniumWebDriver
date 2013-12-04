@@ -11,16 +11,22 @@
 //---------------------------------------------------------------------------------------------------------------------------------------------------
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Threading;
 using System.Windows.Threading;
 using Microsoft.Phone.Controls;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace WindowsPhoneDriver
 {
     public class AutomatedWebBrowser
     {
+        private const string WindowReferenceKey = "WINDOW";
+        private const string ElementReferenceKey = "ELEMENT";
+
         public string ScreenShot {get; set;}
         public string JsonElementContainer {get; private set;}
         public string SourceContainer {get; private set;}
@@ -33,6 +39,7 @@ namespace WindowsPhoneDriver
         private MainPage page;
         private Guid sessionId;
         private WebBrowser browser;
+        private string focusedFrame;
 
         public AutomatedWebBrowser(Dispatcher mainThreadDispatcher, MainPage page)
         {
@@ -65,7 +72,6 @@ namespace WindowsPhoneDriver
 
         public void InitSelenium()
         {
-            EvalJs(GetJs("Functions.js"));
         }
 
         public void Navigate(string uri)
@@ -73,6 +79,7 @@ namespace WindowsPhoneDriver
             CallInMainThread(
                 () => { this.browser.Navigate(new Uri(uri)); });
 
+            this.focusedFrame = string.Empty;
             CurrentUri = uri;
         }
 
@@ -108,28 +115,24 @@ namespace WindowsPhoneDriver
             return this.ScreenShot;
         }
 
-        public string FindElement(string strategy, string value)
+        public string FindElement(string strategy, string value, string parentElementId)
         {
             strategy = Helpers.WrapString(strategy);
             value = Helpers.WrapString(value);
-
-            InjectAtomsScript("find_element_ie.js", strategy, value);
-            return EvalJs("SeleniumWindowsPhoneDriver.SaveElement(SeleniumWindowsPhoneDriver.LastCallResult);").ToString();
+            return InjectAtomsScript(WebDriverAtoms.FindElement, strategy, value, ConstructElementReference(parentElementId), this.ConstructFrameReference());
         }
 
-        public string FindElements(string strategy, string value)
+        public string FindElements(string strategy, string value, string parentElementId)
         {
             strategy = Helpers.WrapString(strategy);
             value = Helpers.WrapString(value);
-
-            InjectAtomsScript("find_elements_ie.js", strategy, value);
-            return EvalJs("SeleniumWindowsPhoneDriver.ConvertElementsToInternlIds(SeleniumWindowsPhoneDriver.LastCallResult);").ToString();
+            return InjectAtomsScript(WebDriverAtoms.FindElements, strategy, value, ConstructElementReference(parentElementId), this.ConstructFrameReference());
         }
 
-        private string InjectAtomsScript(string path, params object[] paramaters)
+        private string InjectAtomsScript(string script, params object[] paramaters)
         {
-            string script = Helpers.WrapFunctionCallWithResult(GetJs(Path.Combine("Atoms", path)), paramaters);
-            return EvalJs(script).ToString();
+            string wrappedScript = Helpers.WrapFunctionCallWithResult(script, paramaters);
+            return EvalJs(wrappedScript).ToString();
         }
 
         public string GetSessionId()
@@ -152,34 +155,19 @@ namespace WindowsPhoneDriver
             this.OperationLock.Set();
         }
 
-        public bool Click(string internalId)
+        public string Click(string internalId)
         {
-            InjectAtomsScript("click_ie.js", GetElementByInternalIdScript(internalId));
-
-            return string.IsNullOrEmpty("ss");
+            return InjectAtomsScript(WebDriverAtoms.Click, ConstructElementReference(internalId), this.ConstructFrameReference());
         }
 
-
-        public bool Type(string internalId, string keys, int keyboardMode, bool opt_persistModifiers)
+        public string Type(string internalId, string keys)
         {
-            EvalJs(GetJs(@"Atoms\inputs.js"));
-
-            internalId = Helpers.WrapString(internalId);
-            keys = Helpers.WrapString(keys);
-            string opt_persistModifiersString = "true";
-
-            if (opt_persistModifiers == false)
-            {
-                opt_persistModifiersString = "false";
-            }
-
-            EvalJs(Helpers.WrapFunctionCall("SeleniumWindowsPhoneDriver.Type", internalId, keys, keyboardMode, opt_persistModifiersString));
-            return true;
+            return InjectAtomsScript(WebDriverAtoms.Type, ConstructElementReference(internalId), keys, this.ConstructFrameReference());
         }
 
         public string ElementClear(string internalId)
         {
-            return InjectAtomsScript("clear_ie.js", GetElementByInternalIdScript(internalId)).ToString();
+            return InjectAtomsScript(WebDriverAtoms.Clear, ConstructElementReference(internalId), this.ConstructFrameReference()).ToString();
         }
 
         public CookieCollection GetCookies()
@@ -196,129 +184,150 @@ namespace WindowsPhoneDriver
             this.OperationLock.Set();
         }
 
-        public void Submit(string internalId)
+        public string Submit(string internalId)
         {
-            InjectAtomsScript("submit_ie.js", GetElementByInternalIdScript(internalId));
+            return InjectAtomsScript(WebDriverAtoms.Submit, internalId, this.ConstructFrameReference()).ToString();
         }
 
         public string GetCssProperty(string internalId, string propertyName)
         {
-            InjectAtomsScript("get_effective_style_ie.js", GetElementByInternalIdScript(internalId), Helpers.WrapString(propertyName));
-
-            return ResultToJson();
+            return InjectAtomsScript(WebDriverAtoms.GetValueOfCssProperty, ConstructElementReference(internalId), Helpers.WrapString(propertyName), this.ConstructFrameReference());
         }
 
         public string IsDisplayed(string internalId)
         {
-            InjectAtomsScript("is_displayed_ie.js", GetElementByInternalIdScript(internalId));
-
-            return ResultToJson();
+            return InjectAtomsScript(WebDriverAtoms.IsDisplayed, ConstructElementReference(internalId), this.ConstructFrameReference());
         }
 
         public string IsEnabled(string internalId)
         {
-            InjectAtomsScript("is_enabled_ie.js", GetElementByInternalIdScript(internalId));
-
-            return ResultToJson();
+            return InjectAtomsScript(WebDriverAtoms.IsEnabled, ConstructElementReference(internalId), this.ConstructFrameReference());
         }
 
-        public string GetElementByInternalIdScript(string internalId)
+        public string Execute(string script, string args)
         {
-            internalId = Helpers.WrapString(internalId);
-            return string.Format("SeleniumWindowsPhoneDriver.GetElement({0})", internalId);
-        }
-
-        public string Execute(string script)
-        {
-            return EvalJs(script).ToString();
+            string result = InjectAtomsScript(WebDriverAtoms.ExecuteScript, Helpers.WrapString(script), args, this.ConstructFrameReference());
+            return result;
         }
 
         public string GetLocation(string internalId)
         {
-            InjectAtomsScript("get_location_ie.js", GetElementByInternalIdScript(internalId));
-
-            return ResultToJson();
+            return InjectAtomsScript(WebDriverAtoms.GetTopLeftCoordinates, ConstructElementReference(internalId), this.ConstructFrameReference());
         }
 
         public string IsSelected(string internalId)
         {
-            InjectAtomsScript("is_selected_ie.js", GetElementByInternalIdScript(internalId));
-
-            return ResultToJson();
-        }
-
-        private string ResultToJson()
-        {
-            return EvalJs("JSON.stringify(SeleniumWindowsPhoneDriver.LastCallResult);").ToString();
+            return InjectAtomsScript(WebDriverAtoms.IsSelected, ConstructElementReference(internalId), this.ConstructFrameReference());
         }
 
         public string GetSize(string internalId)
         {
-            InjectAtomsScript("get_size_ie.js", GetElementByInternalIdScript(internalId));
+            return InjectAtomsScript(WebDriverAtoms.GetSize, ConstructElementReference(internalId), this.ConstructFrameReference());
+        }
 
-            return ResultToJson();
+        public string GetTagName(string internalId)
+        {
+            string tagNameScript = "\"return arguments[0].tagName;\"";
+            string tagNameArgs = string.Format("[{0}]", ConstructElementReference(internalId));
+            return InjectAtomsScript(WebDriverAtoms.ExecuteScript, tagNameScript, tagNameArgs, this.ConstructFrameReference());
         }
 
         public string GetText(string internalId)
         {
-            InjectAtomsScript("get_text_ie.js", GetElementByInternalIdScript(internalId)).ToString();
-
-            return ResultToJson();
+            return InjectAtomsScript(WebDriverAtoms.GetText, ConstructElementReference(internalId), this.ConstructFrameReference());
         }
 
         public string GetAttribute(string internalId, string name)
         {
-            InjectAtomsScript("get_attribute_ie.js", GetElementByInternalIdScript(internalId), Helpers.WrapString(name));
-
-            return ResultToJson();
+            return InjectAtomsScript(WebDriverAtoms.GetAttributeValue, ConstructElementReference(internalId), Helpers.WrapString(name), this.ConstructFrameReference());
         }
 
-        /// <summary>
-        /// Function will load file from Js/ dir. It should throw some exception.
-        /// </summary>
-        /// <param name="scriptPath">path to the script</param>
-        /// <returns>Content of script file.</returns>
-        public string GetJs(string scriptPath)
+        public string SwitchToFrame(string frameIdentifier)
         {
-            using (FileStream fileStream = File.OpenRead(Path.Combine("Js", scriptPath)))
+            string result = string.Empty;
+            if (frameIdentifier == null)
             {
-                using (StreamReader reader = new StreamReader(fileStream))
+                InjectAtomsScript(WebDriverAtoms.DefaultContent);
+                this.focusedFrame = string.Empty;
+                string responseValue = string.Format("{{ \"{0}\" : null }}", WindowReferenceKey);
+                return JsonWire.BuildRespose(responseValue, JsonWire.ResponseCode.Sucess, string.Empty);
+            }
+            else
+            {
+                string frameId = frameIdentifier;
+                string frameAtom = WebDriverAtoms.FrameByIdOrName;
+                if (frameIdentifier.Contains(ElementReferenceKey))
                 {
-                    try
+                    frameAtom = WebDriverAtoms.GetFrameWindow;
+                }
+                else
+                {
+                    int frameIndex = 0;
+                    if (int.TryParse(frameIdentifier, out frameIndex))
                     {
-                        return reader.ReadToEnd();
+                        frameAtom = WebDriverAtoms.FrameByIndex;
                     }
-                    catch (IOException exception)
+                    else
                     {
-                        //TODO: inform about this fact on screen
-                        Helpers.Log("Problems while opening {0} fatal error: {1}", scriptPath, exception.ToString());
-                        App.Current.Terminate();
+                        frameIdentifier = Helpers.WrapString(frameIdentifier);
+                    }
+                }
+
+                result = InjectAtomsScript(frameAtom, frameIdentifier, this.ConstructFrameReference());
+                Dictionary<string, object> resultObject = JsonConvert.DeserializeObject<Dictionary<string, object>>(result);
+                object valueObject = null;
+                if (resultObject.TryGetValue("value", out valueObject))
+                {
+                    if (valueObject == null)
+                    {
+                        resultObject["status"] = (int)JsonWire.ResponseCode.NoSuchFrame;
+                        Dictionary<string, object> errorDetails = new Dictionary<string, object>();
+                        errorDetails["message"] = "No frame found";
+                        resultObject["value"] = errorDetails;
+                        result = JsonConvert.SerializeObject(resultObject);
+                    }
+                    else
+                    {
+                        Type t = valueObject.GetType();
+                        JObject valueAsDictionary = valueObject as JObject;
+                        JToken token = null;
+                        if (valueAsDictionary != null && valueAsDictionary.TryGetValue(WindowReferenceKey, out token))
+                        {
+                            this.focusedFrame = valueAsDictionary[WindowReferenceKey].ToString();
+                        }
                     }
                 }
             }
 
-            return string.Empty;
+            return result;
         }
 
         /// <summary>
-        /// Very simple templating, function will replace all $\d parameters in js file
-        /// with corresponding parameter.
+        /// Creates a serializable object for the currently focused frame.
         /// </summary>
-        /// <param name="jsScript">Script content</param>
-        /// <param name="values">Parametrs values that should substitute $\d vairables</param>
-        /// <returns>Processed content of js file (might be unchanged).</returns>
-        static private string ProcessJs(string jsScript, params object[] values)
+        /// <returns>A JSON-serialized reference to the currently focused frame.
+        /// Returns <see langword="null"/> if focused on the top-level frame.</returns>
+        public string ConstructFrameReference()
         {
-            int i = 0;
-
-            foreach (object param in values)
+            if (string.IsNullOrEmpty(this.focusedFrame))
             {
-                Helpers.Log("Param {0}", param.ToString());
-                jsScript = jsScript.Replace("$" + i, param.ToString());
-                i++;
+                return null;
             }
 
-            return jsScript;
+            Dictionary<string, object> frameObject = new Dictionary<string, object>();
+            frameObject[WindowReferenceKey] = this.focusedFrame;
+            string frameReference = JsonConvert.SerializeObject(frameObject);
+            return frameReference;
+        }
+
+        private string ConstructElementReference(string elementId)
+        {
+            if (elementId == null)
+            {
+                return null;
+            }
+
+            return string.Format("{{ \"{0}\": \"{1}\" }}", ElementReferenceKey, elementId);
         }
 
         /// <summary>

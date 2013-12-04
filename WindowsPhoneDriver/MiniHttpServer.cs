@@ -187,8 +187,23 @@ namespace WindowsPhoneDriver
                 );
 
             this.RegisterHandle(
+                new ApiPattern(WebRequest.WebRequestMethod.Post, "/session/:sessionId/element/:id/element"),
+                new MiniHttpServer.RequestHandler(handlers.PostElementElement)
+                );
+
+            this.RegisterHandle(
+                new ApiPattern(WebRequest.WebRequestMethod.Post, "/session/:sessionId/element/:id/elements"),
+                new MiniHttpServer.RequestHandler(handlers.PostElementElements)
+                );
+
+            this.RegisterHandle(
                 new ApiPattern(WebRequest.WebRequestMethod.Get, "/session/:sessionId/element/:id/text"),
                 new MiniHttpServer.RequestHandler(handlers.GetElementText)
+                );
+
+            this.RegisterHandle(
+                new ApiPattern(WebRequest.WebRequestMethod.Get, "/session/:sessionId/element/:id/name"),
+                new MiniHttpServer.RequestHandler(handlers.GetElementName)
                 );
 
             this.RegisterHandle(
@@ -282,13 +297,18 @@ namespace WindowsPhoneDriver
             );
 
             this.RegisterHandle(
+                new ApiPattern(WebRequest.WebRequestMethod.Get, "/session/:sessionId/element/:id/css/:propertyName"),
+                new MiniHttpServer.RequestHandler(handlers.GetElementCss)
+                );
+            
+            this.RegisterHandle(
                 new ApiPattern(WebRequest.WebRequestMethod.Post, "/session/:sessionId/execute"),
                 new MiniHttpServer.RequestHandler(handlers.PostExecute)
             );
             
             this.RegisterHandle(
-                new ApiPattern(WebRequest.WebRequestMethod.Get, "/session/:sessionId/element/:id/css/:propertyName"),
-                new MiniHttpServer.RequestHandler(handlers.GetElementCss)
+                new ApiPattern(WebRequest.WebRequestMethod.Post, "/session/:sessionId/frame"),
+                new MiniHttpServer.RequestHandler(handlers.PostFrame)
                 );
 
             this.RegisterHandle(

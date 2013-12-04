@@ -1,0 +1,28 @@
+js_fragment_csharp(name = "atoms",
+  deps = [
+    "//javascript/webdriver/atoms/fragments/inject:execute_script",
+    "//javascript/webdriver/atoms/fragments/inject:execute_async_script",
+
+    "//javascript/webdriver/atoms/fragments/inject:type",
+    "//javascript/webdriver/atoms/fragments/inject:active_element",
+    "//javascript/webdriver/atoms/fragments/inject:get_frame_window",
+    "//javascript/webdriver/atoms/fragments/inject:default_content",
+    "//javascript/webdriver/atoms/fragments/inject:frame_by_id_or_name",
+    "//javascript/webdriver/atoms/fragments/inject:frame_by_index",
+    "//javascript/webdriver/atoms/fragments/inject:submit",
+    "//javascript/webdriver/atoms/fragments/inject:clear",
+    "//javascript/webdriver/atoms/fragments/inject:click",
+    "//javascript/webdriver/atoms/fragments/inject:is_selected",
+    "//javascript/webdriver/atoms/fragments/inject:is_enabled",
+    "//javascript/webdriver/atoms/fragments/inject:is_displayed",
+    "//javascript/webdriver/atoms/fragments/inject:get_value_of_css_property",
+    "//javascript/webdriver/atoms/fragments/inject:get_text",
+    "//javascript/webdriver/atoms/fragments/inject:get_size",
+    "//javascript/webdriver/atoms/fragments/inject:get_top_left_coordinates",
+    "//javascript/webdriver/atoms/fragments/inject:get_attribute_value",
+    "//javascript/webdriver/atoms/fragments/inject:find_element",
+    "//javascript/webdriver/atoms/fragments/inject:find_elements"
+  ],
+  utf="true",
+  package="WindowsPhoneDriver"
+)

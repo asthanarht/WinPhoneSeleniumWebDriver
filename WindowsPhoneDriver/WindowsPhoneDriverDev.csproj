@@ -113,6 +113,7 @@
     </Compile>
     <Compile Include="JsonWire.cs" />
     <Compile Include="SocketIO.cs" />
+    <Compile Include="WebDriverAtoms.cs" />
     <Compile Include="WebRequest.cs" />
     <Compile Include="WebResponse.cs" />
   </ItemGroup>
@@ -152,25 +153,6 @@
     <Content Include="Assets\Tiles\IconicTileSmall.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Js\Atoms\clear_ie.js" />
-    <Content Include="Js\Atoms\click_ie.js" />
-    <Content Include="Js\Atoms\find_elements_ie.js" />
-    <Content Include="Js\Atoms\find_element_ie.js" />
-    <Content Include="Js\Atoms\get_attribute_ie.js" />
-    <Content Include="Js\Atoms\get_effective_style_ie.js" />
-    <Content Include="Js\Atoms\get_location_ie.js" />
-    <Content Include="Js\Atoms\get_size_ie.js" />
-    <Content Include="Js\Atoms\get_text_ie.js" />
-    <Content Include="Js\Atoms\inputs.js" />
-    <Content Include="Js\Atoms\is_displayed_ie.js" />
-    <Content Include="Js\Atoms\is_editable_ie.js" />
-    <Content Include="Js\Atoms\is_enabled_ie.js" />
-    <Content Include="Js\Atoms\is_interactable_ie.js" />
-    <Content Include="Js\Atoms\is_in_parent_overflow_ie.js" />
-    <Content Include="Js\Atoms\is_selected_ie.js" />
-    <Content Include="Js\Atoms\submit_ie.js" />
-    <Content Include="Js\Functions.js" />
-    <Content Include="Js\jsTests.html" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\AppResources.resx">

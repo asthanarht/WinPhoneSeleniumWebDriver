@@ -78,7 +78,8 @@ namespace WindowsPhoneDriver
             {
                 try
                 {
-                    returnValue = Browser.InvokeScript("eval", new string[] { script });
+                    Browser.InvokeScript("execScript", script);
+                    returnValue = Browser.InvokeScript("eval", "window.top.document.__wd_fn_result").ToString();
                     break;
                 }
                 catch 
@@ -166,7 +167,7 @@ namespace WindowsPhoneDriver
         private void Browser_LoadCompleted(object sender, NavigationEventArgs e)
         {
             Helpers.Log("Load completed");
-            Browser.InvokeScript("eval", BrowserState.GetJs("Functions.js"));
+            //Browser.InvokeScript("eval", BrowserState.GetJs("Functions.js"));
             //Make sure that scripts are enabled inside the browser
             //It sometimes changes, dont't know why
             Browser.IsScriptEnabled = true;
