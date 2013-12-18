@@ -42,7 +42,7 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
     <Reference Include="XapDeployDll">
-      <HintPath>.\XapDeployDll.dll</HintPath>
+      <HintPath>..\..\..\Program Files (x86)\Microsoft SDKs\Windows Phone\v8.0\Tools\XAP Deployment\XapDeployDll.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
