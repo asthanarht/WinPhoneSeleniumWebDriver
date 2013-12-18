@@ -105,7 +105,6 @@ Windows Phone Selenium WebDriver
 
    - No support for touching automations
    - No support for multiple windows
-   - No support for frames
 
    All functions that are not implemented will return appropriate error message specified as in
    JsonWireProtocol document.
