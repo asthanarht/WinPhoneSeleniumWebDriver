@@ -314,7 +314,7 @@ namespace DriverDeployTool
             }
             //TODO: indexed device
 
-            string calle = string.Format("ts {0} {1} {2}",
+            string calle = string.Format("ts {0} {1} \"{2}\"",
                 target,
                 this.productID,
                 tempDir
