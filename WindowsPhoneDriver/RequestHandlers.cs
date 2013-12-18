@@ -10,7 +10,6 @@
 // See the Apache 2 License for the specific language governing permissions and limitations under the License.
 //---------------------------------------------------------------------------------------------------------------------------------------------------
 
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -22,6 +21,7 @@ using System.Runtime.Serialization.Json;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
+using Newtonsoft.Json;
 
 namespace WindowsPhoneDriver
 {
@@ -36,15 +36,22 @@ namespace WindowsPhoneDriver
 
         public WebResponse GetStatus(WebRequest request, Dictionary<string, string> matchedApiValues)
         {
-            Dictionary<string, Dictionary<string, string>> responseJson = new Dictionary<string, Dictionary<string, string>>();
+            Dictionary<string, object> statusValue = new Dictionary<string, object>();
+            Dictionary<string, object> build = new Dictionary<string, object>();
+            build["version"] = "0.01";
+
+            Dictionary<string, object> os = new Dictionary<string, object>();
+            os["version"] = "8";
+            os["name"] = "Windows Phone 8";
+
+            statusValue["build"] = build;
+            statusValue["os"] = os;
 
             WebResponse response = new WebResponse();
 
             response.StatusCode = 200;
             response.ContentType = "application/json;charset=utf-8";
-            //TODO generate this line
-            response.Content = "{\"build\": {\"version\":\"0.01\"}, \"os\":{\"version\":\"8\", \"name\": \"Windows Phone 8\"}}";
-
+            response.Content = WebDriverWireProtocolJsonConverter.Serialize(statusValue);
             return response;
         }
 
@@ -67,17 +74,14 @@ namespace WindowsPhoneDriver
             //this function is is just a stub
             //it dosen't care about session-id because we
             //currently don't support multiple sessions
-            string sessionId = BrowserState.GetSessionId();
-
-            string content = "{\"sessionId\":\"" + sessionId + "\",\"status\":0,\"value\":{\"browserAttachTimeout\":0,\"browserName\":\"internet explorer\",\"cssSelectorsEnabled\":true,\"elementScrollBehavior\":0,\"enableElementCacheCleanup\":true,\"enablePersistentHover\":true,\"handlesAlerts\":true,\"ignoreProtectedModeSettings\":false,\"ignoreZoomSetting\":false,\"initialBrowserUrl\":\"\",\"javascriptEnabled\":true,\"nativeEvents\":true,\"platform\":\"WINDOWS\",\"requireWindowFocus\":true,\"takesScreenshot\":true,\"unexpectedAlertBehaviour\":\"ignore\",\"version\":\"10\"}}";
-            return Helpers.GetSuccessWithContent(sessionId, content);
+            Dictionary<string, object> responseObject = BrowserState.DescribeSession();
+            return ConstructResponse(responseObject);
         }
 
         public WebResponse DeleteSession(WebRequest request, Dictionary<string, string> matchedApiValues)
         {
-            string sessionId = BrowserState.GetSessionId();
-            string content = "{\"sessionId\":\"" + sessionId + "\",\"status\":0,\"value\":null}";
-            return Helpers.GetSuccessWithContent(sessionId, content);
+            Dictionary<string, object> responseObject = BrowserState.EndSession();
+            return ConstructResponse(responseObject);
         }
 
         public WebResponse PostTimeouts(WebRequest request, Dictionary<string, string> matchedApiValues)
@@ -97,79 +101,68 @@ namespace WindowsPhoneDriver
 
         public WebResponse GetWindowHandle(WebRequest request, Dictionary<string, string> matchedApiValues)
         {
-            string sessionId = BrowserState.GetSessionId();
-
-            return Helpers.GetSuccessWithContent(sessionId, "\"FakeHandle\"");
+            Dictionary<string, object> responseObject = BrowserState.GetCurrentWindowHandle();
+            return ConstructResponse(responseObject);
         }
 
         public WebResponse GetWindowHandles(WebRequest request, Dictionary<string, string> matchedApiValues)
         {
-            return WebResponse.NotImplemented();
+            Dictionary<string, object> responseObject = BrowserState.GetAllWindowHandles();
+            return ConstructResponse(responseObject);
         }
 
         public WebResponse GetUrl(WebRequest request, Dictionary<string, string> matchedApiValues)
         {
-            string sessionId = BrowserState.GetSessionId();
-
-            WebResponse response = Helpers.GetSuccessWithContent(
-                sessionId,
-                Helpers.ToJsonString(BrowserState.CurrentUri)
-                );
-
-            return response;
+            Dictionary<string, object> responseObject = BrowserState.GetUrl();
+            return ConstructResponse(responseObject);
         }
 
         public WebResponse PostUrl(WebRequest request, Dictionary<string, string> matchedApiValues)
         {
-            WebResponse response = new WebResponse();
-
             Dictionary<string, object> dict = request.DeserializeContent();
-
-            if (dict.ContainsKey("url") == true)
+            List<string> missingParameters = GetMissingParameters(dict, new List<string>() { "url" });
+            if (missingParameters.Count > 0)
             {
-                string sessionIdString = BrowserState.GetSessionId();
-
-                response.StatusCode = 200;
-                response.ContentType = "application/json;charset=utf-8";
-                response.Content = "{\"sessionId\":\"" + sessionIdString + "\",\"status\":0,\"value\":\"\"}";
-
-                this.BrowserState.Navigate((string)dict["url"]);
-            }
-            else
-            {
-                //TODO, response with missing parameter
+                return ConstructMissingParameterResponse(missingParameters);
             }
 
-            return response;
+            Dictionary<string, object> responseObject = this.BrowserState.Navigate((string)dict["url"]);
+            return ConstructResponse(responseObject);
         }
 
         public WebResponse PostForward(WebRequest request, Dictionary<string, string> matchedApiValues)
         {
-            return WebResponse.NotImplemented();
+            Dictionary<string, object> responseObject = this.BrowserState.GoForward();
+            return ConstructResponse(responseObject);
         }
 
         public WebResponse PostBack(WebRequest request, Dictionary<string, string> matchedApiValues)
         {
-            return WebResponse.NotImplemented();
+            Dictionary<string, object> responseObject = this.BrowserState.GoBack();
+            return ConstructResponse(responseObject);
         }
 
         public WebResponse PostRefresh(WebRequest request, Dictionary<string, string> matchedApiValues)
         {
-            return WebResponse.NotImplemented();
+            Dictionary<string, object> responseObject = this.BrowserState.Refresh();
+            return ConstructResponse(responseObject);
         }
 
         public WebResponse PostExecute(WebRequest request, Dictionary<string, string> matchedApiValues)
         {
             var dict = request.DeserializeContent();
+            List<string> missingParameters = GetMissingParameters(dict, new List<string>() { "script", "args" });
+            if (missingParameters.Count > 0)
+            {
+                return ConstructMissingParameterResponse(missingParameters);
+            }
 
-            //only first overload of Seleniums Execute is implemneted (i.e. you cannot pass parameters)
+
             string script = dict["script"].ToString();
             string argsString = JsonConvert.SerializeObject(dict["args"]);
-            string sessionId = BrowserState.GetSessionId();
 
-            string ret = BrowserState.Execute(script, argsString);
-
-            return Helpers.GetSuccessWithContent(sessionId, ret);
+            Dictionary<string, object> ret = BrowserState.Execute(script, argsString);
+            return ConstructResponse(ret);
         }
 
         public WebResponse PostExecuteAsync(WebRequest request, Dictionary<string, string> matchedApiValues)
@@ -179,16 +172,8 @@ namespace WindowsPhoneDriver
 
         public WebResponse GetScreenshot(WebRequest request, Dictionary<string, string> matchedApiValues)
         {
-            string base64Screenshot = BrowserState.GetScreenshot();
-            WebResponse response = new WebResponse();
-            StringBuilder sb = new StringBuilder();
-            string sessionIdString = BrowserState.GetSessionId();
-
-            response.StatusCode = 200;
-            response.ContentType = "application/json;charset=utf-8";
-            response.Content = "{\"sessionId\":\"" + sessionIdString + "\",\"status\":0,\"value\":\"" + base64Screenshot + "\"}"; 
-
-            return response;
+            Dictionary<string, object> responseObject = BrowserState.GetScreenshot();
+            return ConstructResponse(responseObject);
         }
 
         public WebResponse GetImeAvailableEngines(WebRequest request, Dictionary<string, string> matchedApiValues)
@@ -219,15 +204,20 @@ namespace WindowsPhoneDriver
         public WebResponse PostFrame(WebRequest request, Dictionary<string, string> matchedApiValues)
         {
             Dictionary<string, object> dict = request.DeserializeContent();
+            List<string> missingParameters = GetMissingParameters(dict, new List<string>() { "id" });
+            if (missingParameters.Count > 0)
+            {
+                return ConstructMissingParameterResponse(missingParameters);
+            }
+
             string id = null;
-            if (dict.ContainsKey("id") && dict["id"] != null)
+            if (dict["id"] != null)
             {
                 id = dict["id"].ToString();
             }
 
-            string result = BrowserState.SwitchToFrame(id);
-            WebResponse response = Helpers.GetSuccessWithContent("", result);
-            return response;
+            Dictionary<string, object> responseObject = BrowserState.SwitchToFrame(id);
+            return ConstructResponse(responseObject);
         }
 
         public WebResponse PostWindow(WebRequest request, Dictionary<string, string> matchedApiValues)
@@ -267,23 +257,22 @@ namespace WindowsPhoneDriver
 
         public WebResponse GetCookie(WebRequest request, Dictionary<string, string> matchedApiValues)
         {
-            WebResponse response = new WebResponse();
-            CookieCollection cookieJar = this.BrowserState.GetCookies();
-            string sessionId = BrowserState.GetSessionId();
-
-            response.StatusCode = 200;
-            response.ContentType = "application/json;charset=utf-8";
-
-            string jsonCookieJar = Helpers.BuildJsonCookieJar(cookieJar);
-
-            response.Content = JsonWire.BuildRespose(jsonCookieJar, JsonWire.ResponseCode.Sucess, sessionId);
-
-            return response;
+            Dictionary<string, object> result = this.BrowserState.GetCookies();
+            return ConstructResponse(result);
         }
 
         public WebResponse PostCookie(WebRequest request, Dictionary<string, string> matchedApiValues)
         {
-            return WebResponse.NotImplemented();
+            Dictionary<string, object> dict = request.DeserializeContent();
+            List<string> missingParameters = GetMissingParameters(dict, new List<string>() { "cookie" });
+            if (missingParameters.Count > 0)
+            {
+                return ConstructMissingParameterResponse(missingParameters);
+            }
+
+            Dictionary<string, object> cookie = dict["cookie"] as Dictionary<string, object>;
+            Dictionary<string, object> result = BrowserState.AddCookie(cookie);
+            return ConstructResponse(result);
         }
 
         public WebResponse DeleteCookie(WebRequest request, Dictionary<string, string> matchedApiValues)
@@ -298,39 +287,34 @@ namespace WindowsPhoneDriver
 
         public WebResponse GetSource(WebRequest request, Dictionary<string, string> matchedApiValues)
         {
-            //TODO fix if no url is loaded
-            string sessionId = BrowserState.GetSessionId();
-            string source = BrowserState.GetSource();
-            WebResponse resp = Helpers.GetSuccessWithContent(sessionId, source);
-
-            return resp;
+            Dictionary<string, object> result = BrowserState.GetSource();
+            return ConstructResponse(result);
         }
 
         public WebResponse GetTitle(WebRequest request, Dictionary<string, string> matchedApiValues)
         {
-            return WebResponse.NotImplemented();
+            Dictionary<string, object> result = BrowserState.GetTitle();
+            return ConstructResponse(result);
         }
 
         public WebResponse PostElement(WebRequest request, Dictionary<string, string> matchedApiValues)
         {
             Dictionary<string, object> dict = request.DeserializeContent();
-            string elementJson = BrowserState.FindElement((string)dict["using"], (string)dict["value"], null);
-            string sessionId = BrowserState.GetSessionId();
-
-            WebResponse response = Helpers.GetSuccessWithContent(sessionId, elementJson);
-
-            return response;
+            Dictionary<string, object> result = BrowserState.FindElement((string)dict["using"], (string)dict["value"], null);
+            return ConstructResponse(result);
         }
 
         public WebResponse PostElements(WebRequest request, Dictionary<string, string> matchedApiValues)
         {
             Dictionary<string, object> dict = request.DeserializeContent();
-            string elementsArray = BrowserState.FindElements((string)dict["using"], (string)dict["value"], null);
-            string sessionId = BrowserState.GetSessionId();
+            List<string> missingParameters = GetMissingParameters(dict, new List<string>() { "using", "value" });
+            if (missingParameters.Count > 0)
+            {
+                return ConstructMissingParameterResponse(missingParameters);
+            }
 
-            WebResponse response = Helpers.GetSuccessWithContent(sessionId, elementsArray);
-
-            return response;
+            Dictionary<string, object> result = BrowserState.FindElements((string)dict["using"], (string)dict["value"], null);
+            return ConstructResponse(result);
         }
 
         public WebResponse PostElementActive(WebRequest request, Dictionary<string, string> matchedApiValues)
@@ -346,64 +330,69 @@ namespace WindowsPhoneDriver
         public WebResponse PostElementElement(WebRequest request, Dictionary<string, string> matchedApiValues)
         {
             Dictionary<string, object> dict = request.DeserializeContent();
-            string elementJson = BrowserState.FindElement((string)dict["using"], (string)dict["value"], matchedApiValues["id"]);
-            string sessionId = BrowserState.GetSessionId();
+            List<string> missingParameters = GetMissingParameters(dict, new List<string>() { "using", "value" });
+            if (missingParameters.Count > 0)
+            {
+                return ConstructMissingParameterResponse(missingParameters);
+            }
 
-            WebResponse response = Helpers.GetSuccessWithContent(sessionId, elementJson);
-
-            return response;
+            Dictionary<string, object> result = BrowserState.FindElement((string)dict["using"], (string)dict["value"], matchedApiValues["id"]);
+            return ConstructResponse(result);
         }
 
         public WebResponse PostElementElements(WebRequest request, Dictionary<string, string> matchedApiValues)
         {
             Dictionary<string, object> dict = request.DeserializeContent();
-            string elementsArray = BrowserState.FindElements((string)dict["using"], (string)dict["value"], null);
-            string sessionId = BrowserState.GetSessionId();
+            List<string> missingParameters = GetMissingParameters(dict, new List<string>() { "using", "value" });
+            if (missingParameters.Count > 0)
+            {
+                return ConstructMissingParameterResponse(missingParameters);
+            }
 
-            WebResponse response = Helpers.GetSuccessWithContent(sessionId, elementsArray);
-
-            return response;
+            Dictionary<string, object> result = BrowserState.FindElements((string)dict["using"], (string)dict["value"], matchedApiValues["id"]);
+            return ConstructResponse(result);
         }
 
         public WebResponse PostElementClick(WebRequest request, Dictionary<string, string> matchedApiValues)
         {
-            string sessionId = BrowserState.GetSessionId();
-            string result = BrowserState.Click(matchedApiValues["id"]);
-
-            WebResponse resp = Helpers.GetSuccessWithContent(sessionId, result);
-            return resp;
+            Dictionary<string, object> result = BrowserState.Click(matchedApiValues["id"]);
+            return ConstructResponse(result);
         }
 
         public WebResponse PostElementSubmit(WebRequest request, Dictionary<string, string> matchedApiValues)
         {
-            string sessionId = BrowserState.GetSessionId();
-            string result = BrowserState.Submit(matchedApiValues["id"]);
-
-            WebResponse resp = Helpers.GetSuccessWithContent(sessionId, result);
-            return resp;
+            Dictionary<string, object> result = BrowserState.Submit(matchedApiValues["id"]);
+            return ConstructResponse(result);
         }
 
         public WebResponse GetElementText(WebRequest request, Dictionary<string, string> matchedApiValues)
         {
-            string sessionId = BrowserState.GetSessionId();
-            string text = BrowserState.GetText(matchedApiValues["id"]);
-
-            WebResponse resp = Helpers.GetSuccessWithContent(sessionId, text);
-
-            return resp;
+            Dictionary<string, object> result = BrowserState.GetText(matchedApiValues["id"]);
+            return ConstructResponse(result);
         }
 
         public WebResponse PostElementValue(WebRequest request, Dictionary<string, string> matchedApiValues)
         {
-            string sessionId = BrowserState.GetSessionId();
-            
-            Dictionary<string, char[]> dict = JsonConvert.DeserializeObject<Dictionary<string, char[]>>(request.Content);
-            char[] keys = dict["value"];
+            Dictionary<string, object> dict = request.DeserializeContent();
+            List<string> missingParameters = GetMissingParameters(dict, new List<string>() { "value" });
+            if (missingParameters.Count > 0)
+            {
+                return ConstructMissingParameterResponse(missingParameters);
+            }
 
-            string result = BrowserState.Type(matchedApiValues["id"], new string(keys));
+            object[] keySequences = dict["value"] as object[];
+            if (keySequences == null)
+            {
+            }
 
-            WebResponse resp = Helpers.GetSuccessWithContent(sessionId, result);
-            return resp;
+            StringBuilder keys = new StringBuilder();
+            foreach (object keySequence in keySequences)
+            {
+                keys.Append(keySequence.ToString());
+            }
+
+            Dictionary<string, object> result = BrowserState.Type(matchedApiValues["id"], keys.ToString());
+            return ConstructResponse(result);
         }
 
         public WebResponse PostKeys(WebRequest request, Dictionary<string, string> matchedApiValues)
@@ -413,45 +402,32 @@ namespace WindowsPhoneDriver
 
         public WebResponse GetElementName(WebRequest request, Dictionary<string, string> matchedApiValues)
         {
-            string sessionId = BrowserState.GetSessionId();
-            string tagName = BrowserState.GetTagName(matchedApiValues["id"]);
-
-            return Helpers.GetSuccessWithContent(sessionId, tagName);
+            Dictionary<string, object> result = BrowserState.GetTagName(matchedApiValues["id"]);
+            return ConstructResponse(result);
         }
 
         public WebResponse PostElementClear(WebRequest request, Dictionary<string, string> matchedApiValues)
         {
-            string sessionId = BrowserState.GetSessionId();
-            BrowserState.ElementClear(matchedApiValues["id"]);
-
-            return Helpers.GetSuccessWithContent(sessionId, "null");
+            Dictionary<string, object> result = BrowserState.ElementClear(matchedApiValues["id"]);
+            return ConstructResponse(result);
         }
 
         public WebResponse GetElementSelected(WebRequest request, Dictionary<string, string> matchedApiValues)
         {
-            string sessionId = BrowserState.GetSessionId();
-            string isSelected = BrowserState.IsSelected(matchedApiValues["id"]);
-
-            return Helpers.GetSuccessWithContent(sessionId, isSelected);
+            Dictionary<string, object> result = BrowserState.IsSelected(matchedApiValues["id"]);
+            return ConstructResponse(result);
         }
 
         public WebResponse GetElementEnabled(WebRequest request, Dictionary<string, string> matchedApiValues)
         {
-            string sessionId = BrowserState.GetSessionId();
-            string isEnabled = BrowserState.IsEnabled(matchedApiValues["id"]);
-
-            return Helpers.GetSuccessWithContent(sessionId, isEnabled);
+            Dictionary<string, object> result = BrowserState.IsEnabled(matchedApiValues["id"]);
+            return ConstructResponse(result);
         }
 
         public WebResponse GetElementAttribute(WebRequest request, Dictionary<string, string> matchedApiValues)
         {
-            string attrib = BrowserState.GetAttribute(matchedApiValues["id"], matchedApiValues["name"]);
-
-            string sessionId = BrowserState.GetSessionId();
-
-            WebResponse resp = Helpers.GetSuccessWithContent(sessionId, attrib);
-
-            return resp;
+            Dictionary<string, object> result = BrowserState.GetAttribute(matchedApiValues["id"], matchedApiValues["name"]);
+            return ConstructResponse(result);
         }
 
         public WebResponse GetElementEquals(WebRequest request, Dictionary<string, string> matchedApiValues)
@@ -461,18 +437,14 @@ namespace WindowsPhoneDriver
 
         public WebResponse GetElementDisplayed(WebRequest request, Dictionary<string, string> matchedApiValues)
         {
-            string sessionId = BrowserState.GetSessionId();
-            string isDisplayed = BrowserState.IsDisplayed(matchedApiValues["id"]);
-
-            return Helpers.GetSuccessWithContent(sessionId, isDisplayed);
+            Dictionary<string, object> result = BrowserState.IsDisplayed(matchedApiValues["id"]);
+            return ConstructResponse(result);
         }
 
         public WebResponse GetElementLocation(WebRequest request, Dictionary<string, string> matchedApiValues)
         {
-            string sessionId = BrowserState.GetSessionId();
-            string location = BrowserState.GetLocation(matchedApiValues["id"]);
-
-            return Helpers.GetSuccessWithContent(sessionId, location);
+            Dictionary<string, object> result = BrowserState.GetLocation(matchedApiValues["id"]);
+            return ConstructResponse(result);
         }
 
         public WebResponse GetElementLocationInView(WebRequest request, Dictionary<string, string> matchedApiValues)
@@ -482,21 +454,17 @@ namespace WindowsPhoneDriver
 
         public WebResponse GetElementSize(WebRequest request, Dictionary<string, string> matchedApiValues)
         {
-            string sessionId = BrowserState.GetSessionId();
-            string size = BrowserState.GetSize(matchedApiValues["id"]);
-
-            return Helpers.GetSuccessWithContent(sessionId, size);
+            Dictionary<string, object> result = BrowserState.GetSize(matchedApiValues["id"]);
+            return ConstructResponse(result);
         }
 
         public WebResponse GetElementCss(WebRequest request, Dictionary<string, string> matchedApiValues)
         {
-            string sessionId = BrowserState.GetSessionId();
             string internalId = matchedApiValues["id"];
             string propertyName = matchedApiValues["propertyName"];
 
-            string propertyValue = BrowserState.GetCssProperty(internalId, propertyName);
-
-            return Helpers.GetSuccessWithContent(sessionId, propertyValue);
+            Dictionary<string, object> result = BrowserState.GetCssProperty(internalId, propertyName);
+            return ConstructResponse(result);
         }
 
         public WebResponse GetOrientation(WebRequest request, Dictionary<string, string> matchedApiValues)
@@ -536,18 +504,8 @@ namespace WindowsPhoneDriver
 
         public WebResponse PostClick(WebRequest request, Dictionary<string, string> matchedApiValues)
         {
-            //TODO
-            // -response with ElementNotVisible, StaleElementReference, NoShuchWindow
-            WebResponse response = new WebResponse();
-            string sessionId = BrowserState.GetSessionId();
-
-            string content = BrowserState.Click(matchedApiValues["id"]);
-
-            response.StatusCode = 200;
-            response.Content = content;
-            response.ContentType = "application/json;charset=utf-8";
-
-            return response;
+            Dictionary<string, object> result = BrowserState.Click(matchedApiValues["id"]);
+            return ConstructResponse(result); ;
         }
 
         public WebResponse PostButtonDown(WebRequest request, Dictionary<string, string> matchedApiValues)
@@ -684,6 +642,50 @@ namespace WindowsPhoneDriver
         {
             return WebResponse.NotImplemented();
         }
-    }
 
+        private static WebResponse ConstructResponse(Dictionary<string, object> responseValue)
+        {
+            WebResponse response = new WebResponse();
+            response.ContentType = "application/json;charset=utf-8";
+            string serializedValue = WebDriverWireProtocolJsonConverter.Serialize(responseValue);
+            if (responseValue.ContainsKey("status"))
+            {
+                JsonWire.ResponseCode status = (JsonWire.ResponseCode)responseValue["status"];
+                if (status == JsonWire.ResponseCode.Sucess)
+                {
+                    response.StatusCode = 200;
+                }
+                else
+                {
+                    response.StatusCode = 500;
+                }
+            }
+
+            response.Content = serializedValue;
+            return response;
+        }
+
+        private static WebResponse ConstructMissingParameterResponse(List<string> missingParameters)
+        {
+            WebResponse response = new WebResponse();
+            response.StatusCode = 400;
+            response.ContentType = "text/html;charset=utf-8";
+            response.Content = string.Join(",", missingParameters.ToArray());
+            return response;
+        }
+
+        private static List<string> GetMissingParameters(Dictionary<string, object> parameters, List<string> requiredParameters)
+        {
+            List<string> missingParameters = new List<string>();
+            foreach (string parameter in parameters.Keys)
+            {
+                if (!requiredParameters.Contains(parameter))
+                {
+                    missingParameters.Add(parameter);
+                }
+            }
+
+            return missingParameters;
+        }
+    }
 }

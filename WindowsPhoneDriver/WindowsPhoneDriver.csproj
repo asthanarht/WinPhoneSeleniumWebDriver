@@ -95,6 +95,7 @@
     <Compile Include="JsonWire.cs" />
     <Compile Include="SocketIO.cs" />
     <Compile Include="WebDriverAtoms.cs" />
+    <Compile Include="WebDriverWireProtocolJsonConverter.cs" />
     <Compile Include="WebRequest.cs" />
     <Compile Include="WebResponse.cs" />
   </ItemGroup>

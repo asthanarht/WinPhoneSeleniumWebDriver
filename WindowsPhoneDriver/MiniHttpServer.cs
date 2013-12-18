@@ -172,8 +172,18 @@ namespace WindowsPhoneDriver
                 );
 
             this.RegisterHandle(
-                new ApiPattern(WebRequest.WebRequestMethod.Get, "/session/:sessionId/url"),
-                new MiniHttpServer.RequestHandler(handlers.GetUrl)
+                new ApiPattern(WebRequest.WebRequestMethod.Post, "/session/:sessionId/forward"),
+                new MiniHttpServer.RequestHandler(handlers.PostForward)
+                );
+
+            this.RegisterHandle(
+                new ApiPattern(WebRequest.WebRequestMethod.Post, "/session/:sessionId/back"),
+                new MiniHttpServer.RequestHandler(handlers.PostBack)
+                );
+
+            this.RegisterHandle(
+                new ApiPattern(WebRequest.WebRequestMethod.Get, "/session/:sessionId/refresh"),
+                new MiniHttpServer.RequestHandler(handlers.PostRefresh)
                 );
 
             this.RegisterHandle(
@@ -254,6 +264,11 @@ namespace WindowsPhoneDriver
             this.RegisterHandle(
                 new ApiPattern(WebRequest.WebRequestMethod.Get, "/session/:sessionId/source"),
                 new MiniHttpServer.RequestHandler(handlers.GetSource)
+                );
+
+            this.RegisterHandle(
+                new ApiPattern(WebRequest.WebRequestMethod.Get, "/session/:sessionId/title"),
+                new MiniHttpServer.RequestHandler(handlers.GetTitle)
                 );
 
             this.RegisterHandle(

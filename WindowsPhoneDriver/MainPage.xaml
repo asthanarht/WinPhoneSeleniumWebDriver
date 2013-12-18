@@ -48,7 +48,7 @@
 
         <!--ContentPanel - place additional content here-->
         <Grid x:Name="ContentPanel" Grid.Row="1" Margin="12,0,12,0">
-            <phone:WebBrowser x:Name="Browser" HorizontalAlignment="Left" VerticalAlignment="Top" Height="696" Width="456" IsScriptEnabled="True" LoadCompleted="Browser_LoadCompleted" Loaded="Browser_Loaded"/>
+            <phone:WebBrowser x:Name="Browser" HorizontalAlignment="Left" VerticalAlignment="Top" Height="696" Width="456" IsScriptEnabled="True" Loaded="Browser_Loaded"/>
         </Grid>
 
         <!--Uncomment to see an alignment grid to help ensure your controls are

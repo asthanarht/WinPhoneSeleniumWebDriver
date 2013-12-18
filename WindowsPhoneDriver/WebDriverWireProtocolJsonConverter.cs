@@ -31,7 +31,7 @@ namespace WindowsPhoneDriver
 
         public static string Serialize(Dictionary<string, object> value)
         {
-            return JsonConvert.SerializeObject(value, new WebDriverWireProtocolJsonConverter());
+            return JsonConvert.SerializeObject(value);
         }
 
         /// <summary>

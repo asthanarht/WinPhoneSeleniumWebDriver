@@ -10,6 +10,7 @@
 // See the Apache 2 License for the specific language governing permissions and limitations under the License.
 //---------------------------------------------------------------------------------------------------------------------------------------------------
 
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -45,8 +46,10 @@ namespace WindowsPhoneDriver
         } 
 
         public static string WrapString(string input)
-        { 
-            return string.Format("\"{0}\"", input);
+        {
+            // Use the JSON converter here, so that we can make sure
+            // we get the proper escaping of quotes and backslashes.
+            return JsonConvert.SerializeObject(input);
         }
 
         private static string WrapParameters(params object[] paramters)
@@ -109,21 +112,21 @@ namespace WindowsPhoneDriver
         }
 
 
-        public static WebResponse GetSuccessWithContent(string sessionId, string content)
-        {
-            WebResponse response = new WebResponse();
+        //public static WebResponse GetSuccessWithContent(string sessionId, string content)
+        //{
+        //    WebResponse response = new WebResponse();
 
-            response.StatusCode = 200;
-            response.ContentType = "application/json;charset=utf-8";
-            response.Content = content;
+        //    response.StatusCode = 200;
+        //    response.ContentType = "application/json;charset=utf-8";
+        //    response.Content = content;
 
-            return response;
-        }
+        //    return response;
+        //}
 
-        static public string ToJsonString(string input)
-        {
-            return Newtonsoft.Json.JsonConvert.SerializeObject(input);
-        }
+        //static public string ToJsonString(string input)
+        //{
+        //    return Newtonsoft.Json.JsonConvert.SerializeObject(input);
+        //}
 
         static public void Log(string data)
         {

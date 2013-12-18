@@ -62,7 +62,7 @@ namespace WindowsPhoneDriver
 
         public Dictionary<string, object> DeserializeContent()
         {
-            return JsonConvert.DeserializeObject<Dictionary<string, object>>(this.Content);
+            return WebDriverWireProtocolJsonConverter.Deserialize(this.Content);
         }
     }
 }

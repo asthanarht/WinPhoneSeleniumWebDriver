@@ -98,7 +98,7 @@ namespace WindowsPhoneDriver
             }
 
             Helpers.Log("InvokeScript succeeded");
-            BrowserState.OperationLock.Set();
+            BrowserState.SignalComplete();
         }
 
         public void Configurate()
@@ -142,8 +142,9 @@ namespace WindowsPhoneDriver
             }
         }
 
-        public void GetScreenShot()
+        public string GetScreenShot()
         {
+            string screenshot = string.Empty;
             int x = (int)Browser.ActualWidth;
             int y = (int)Browser.ActualHeight;
 
@@ -157,23 +158,10 @@ namespace WindowsPhoneDriver
                 bmp.SaveJpeg(ms, x, y, 0, 100);
                 byte[] imageBytes = ms.ToArray();
 
-                string base64String = Convert.ToBase64String(imageBytes);
-
-                BrowserState.ScreenShot = base64String;
+                screenshot = Convert.ToBase64String(imageBytes);
             }
-            BrowserState.OperationLock.Set();
-        }
 
-        private void Browser_LoadCompleted(object sender, NavigationEventArgs e)
-        {
-            Helpers.Log("Load completed");
-            //Browser.InvokeScript("eval", BrowserState.GetJs("Functions.js"));
-            //Make sure that scripts are enabled inside the browser
-            //It sometimes changes, dont't know why
-            Browser.IsScriptEnabled = true;
-
-            //unblock thread
-            BrowserState.OperationLock.Set();
+            return screenshot;
         }
 
         private void Browser_Loaded(object sender, RoutedEventArgs e)
@@ -189,6 +177,10 @@ namespace WindowsPhoneDriver
 #endif
             RequestHandlers handlers = new RequestHandlers(BrowserState);
             server.RegisterHandlers(handlers);
+
+            //Make sure that scripts are enabled inside the browser
+            //It sometimes changes, dont't know why
+            Browser.IsScriptEnabled = true;
         }
     }
 }

@@ -51,22 +51,5 @@ namespace WindowsPhoneDriver
             SessionNotCreatedException = 33,
             MoveTargetOutOfBounds = 34
         }
-
-        public string GetBrowserCapabilities(string sessionId)
-        { 
-            return string.Format("{{0}:{1},{2}:{3}}",
-                Helpers.ToJsonString("sessionId"),
-                Helpers.ToJsonString(sessionId),
-                Helpers.ToJsonString("status"),
-                Helpers.ToJsonString("0"));
-        }
-
-        public static string BuildRespose(string valueJson, JsonWire.ResponseCode code, string sessionId)
-        {
-            return string.Format("{{\"sessionId\":\"{0}\", \"status\":\"{1}\", \"value\":{2}}}",
-                sessionId,
-                (int)code,
-                valueJson);
-        }
     }
 }
