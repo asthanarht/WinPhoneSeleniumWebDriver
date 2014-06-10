@@ -24,6 +24,7 @@ using Windows.Networking.Connectivity;
 using Windows.System;
 using System.Net.Sockets;
 using System.Threading;
+using System.Collections.Generic;
 
 namespace WindowsPhoneDriver
 {
@@ -39,16 +40,32 @@ namespace WindowsPhoneDriver
 
         public void ShowIPaddresses()
         {
+            List<string> ipAddresses = new List<string>();
             var hostNames = NetworkInformation.GetHostNames();
             Text.Text = string.Empty;
 
             foreach (var hn in hostNames)
             {
-                if (hn.IPInformation != null)
+                if (hn.IPInformation != null &&(hn.IPInformation.NetworkAdapter.IanaInterfaceType == 71
+                    || hn.IPInformation.NetworkAdapter.IanaInterfaceType == 6))
                 {
-                    Text.Text += hn.DisplayName + "\n";
+                    ipAddresses.Add(hn.DisplayName);
 
                     Helpers.Log("Ip -> {0}", hn.DisplayName);
+                }
+                if (ipAddresses.Count < 1)
+                {
+                   
+                }
+                else if (ipAddresses.Count == 1)
+                {
+                     Text.Text =  ipAddresses[0];
+                }
+                else
+                {
+                    //if multiple suitable address were found use the last one
+                    //(regularly the external interface of an emulated device)
+                    Text.Text = ipAddresses[ipAddresses.Count - 1];
                 }
             }
         }
@@ -177,7 +194,7 @@ namespace WindowsPhoneDriver
 #endif
             RequestHandlers handlers = new RequestHandlers(BrowserState);
             server.RegisterHandlers(handlers);
-
+            
             //Make sure that scripts are enabled inside the browser
             //It sometimes changes, dont't know why
             Browser.IsScriptEnabled = true;
