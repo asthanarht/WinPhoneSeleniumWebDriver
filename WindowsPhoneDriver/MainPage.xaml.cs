@@ -65,7 +65,7 @@ namespace WindowsPhoneDriver
                 {
                     //if multiple suitable address were found use the last one
                     //(regularly the external interface of an emulated device)
-                    Text.Text = ipAddresses[ipAddresses.Count - 1];
+                    Text.Text = ipAddresses[0];
                 }
             }
         }
@@ -184,11 +184,11 @@ namespace WindowsPhoneDriver
         private void Browser_Loaded(object sender, RoutedEventArgs e)
         {
 #if AUTOSTART == false
-            Configurate();
+           // Configurate();
 #endif
             BrowserState = new AutomatedWebBrowser(Dispatcher, this);
 #if AUTOSTART == false
-            MiniHttpServer server = new MiniHttpServer(Configuration.Port);
+            MiniHttpServer server = new MiniHttpServer(8080);
 #else
             MiniHttpServer server = new MiniHttpServer(8080);
 #endif
@@ -198,6 +198,7 @@ namespace WindowsPhoneDriver
             //Make sure that scripts are enabled inside the browser
             //It sometimes changes, dont't know why
             Browser.IsScriptEnabled = true;
+            ShowIPaddresses();
         }
     }
 }
